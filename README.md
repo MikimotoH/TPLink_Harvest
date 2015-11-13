@@ -40,8 +40,8 @@ In [24]: CSSs('#content_firmware table')[0].find_elements_by_css_selector('tr.mo
 Out[24]: "Notes\n1.For Archer C2(UN)_V1\n2. Old firmware’s configuration file can be imported into this new firmware.\n3. Your device’s configuration won't be lost aer upgrading, which means you don't need to configure your device again."
 
 # productName
-In [44]: CSS('a.a > strong:nth-child(3)').text                                                                                                           
-Out[44]: 'AC750 Wireless Dual Band Gigabit Router'
+In [50]: CSS('a.a strong').text                                                                                                                        
+Out[50]: 'AC750 Wireless Dual Band Gigabit Router'
 
 # download_url
 In [31]: CSSs('#content_firmware table')[0].find_element_by_css_selector('a').get_attribute('href')
