@@ -71,13 +71,6 @@ def cssWithText(css:str,txt:str)->WebElement:
     return next((_ for _ in driver.find_elements_by_css_selector(css) if  
         _.text == txt), None)
 
-def enterElem(e, func):
-    global driver
-    prev_url = driver.current_url
-    next_url = e.get_attribute('href')
-    uprint('url: %s => %s'%(prev_url, next_url))
-    driver.get(next_url)
-    func(prev_url)
 
 def guessDate(txt:str)->datetime:
     """ txt = '22/10/15' """
@@ -102,7 +95,7 @@ def guessFileSize(txt:str)->int:
         ipdb.set_trace()
         print('txt=',txt)
 
-def fileWalker(prev_url):
+def fileWalker():
     global driver,prevTrail
     try:
         modelName = waitText('h1 strong.model')
@@ -112,12 +105,16 @@ def fileWalker(prev_url):
         tabbtn = cssWithText('ul.row li a', 'Firmware')
         if not tabbtn:
             ulog('no firmware download for "%s"'%modelName)
-            driver.get(prev_url)
+            driver.close()
+            driver.switch_to.window(driver.window_handles[-1])
             return
         tabbtn.click()
         pageUrl=driver.current_url
         tables=getElems('#content_firmware table')
+        #waitUntil( lambda:ulog('is_displayed()=%s'%[_.is_displayed() for 
+        #    _ in tables])>=0 )
         startIdx = getStartIdx()
+        numTables=len(tables)
         for idx in range(startIdx,numTables):
             table=tables[idx]
             if not table.is_displayed():
@@ -127,13 +124,13 @@ def fileWalker(prev_url):
             fileName,_,dateStr,_,lang,_,fileSize = basicInfo.splitlines()
             fwDate=guessDate(dateStr)
             fwVer = fileName.split('_')[-1].strip()
-            fileSize=guessSize(fileSize)
+            fileSize=guessFileSize(fileSize)
             fileLink=table.find_element_by_css_selector('a')
             fileUrl=fileLink.get_attribute('href')
             ulog('fileName="%s"'%fileName)
 
-            moreInfos = table.find_elements_by_css_selector('tr.more-info')
-            fwDesc='\n'.join(_ for _ in moreInfos.text)
+            fwDesc='\n'.join(_.text for _ in 
+                    table.find_elements_by_css_selector('tr.more-info'))
             trailStr=str(prevTrail+[idx])
             sql("INSERT OR REPLACE INTO TFiles (model,revision,"
                 "fw_date, fw_ver, fw_desc, file_name,file_size, "
@@ -142,7 +139,10 @@ def fileWalker(prev_url):
                 ":fwDate,:fwVer,:fwDesc,:fileName,:fileSize,"
                 ":pageUrl,:fileUrl,:trailStr)",locals())
             ulog('UPSERT "%(modelName)s", "%(revName)s", "%(fwDate)s", '
-                ' "%(fileName)s", "%(fileSize)s",%(fileUrl)s'%locals())
+                ' "%(fileName)s", %(fileSize)s,%(fileUrl)s'%locals())
+        driver.close()
+        driver.switch_to.window(driver.window_handles[-1])
+        return
     except Exception as ex:
         ipdb.set_trace()
         traceback.print_exc()
@@ -152,16 +152,50 @@ def fileWalker(prev_url):
 def modelWalker():
     global driver,prevTrail
     try:
-        models = getElems('.list ul li span a')
+        models = getElems('.list ul li a')
         numModels=len(models)
+        ulog('numModels=%s'%numModels) 
         startIdx = getStartIdx()
         for idx in range(startIdx,numModels):
             modelName = models[idx].text
             ulog('enter %s,"%s"'%(idx,modelName))
             prevTrail+=[idx]
-            enterElem(models[idx], fileWalker)
+            models[idx].click()
+            waitUntil(lambda:len(driver.window_handles)==2)
+            driver.switch_to.window(driver.window_handles[-1])
+            fileWalker()
             prevTrail.pop()
-            models = getElems('.list ul li span a')
+            models = getElems('.list ul li a')
+    except Exception as ex:
+        ipdb.set_trace()
+        traceback.print_exc()
+        driver.save_screenshot(getScriptName()+'_'+getFuncName()+'_exc.png')
+
+def marketSelect():
+    global driver,prevTrail
+    try:
+        showEol=waitVisible('#showEndLife')
+        if not showEol.is_selected():
+            showEol.click()
+        selMkt= Select(waitVisible('.product-cat-box select:nth-child(1)'))
+        startIdx=getStartIdx()
+        numMkts = len(selMkt.options)
+        curSel = selMkt.all_selected_options[0].text
+        ulog('current Selected="%s"'%curSel)
+        for idx in range(startIdx, numMkts):
+            selMkt.select_by_index(idx)
+            nextSel=selMkt.options[idx].text
+            ulog('gonna select "%s"'%nextSel)
+            btn = waitVisible('button.round-button.go')
+            with UntilTextChanged('.content-box',9,0.4):
+                btn.click()
+            prevTrail+=[idx]
+            modelWalker()
+            prevTrail.pop()
+            showEol=waitVisible('#showEndLife')
+            if not showEol.is_selected():
+                showEol.click()
+            selMkt= Select(waitVisible('.product-cat-box select:nth-child(1)'))
     except Exception as ex:
         ipdb.set_trace()
         traceback.print_exc()
@@ -180,7 +214,7 @@ def main():
             "revision TEXT,"
             "fw_date DATE,"
             "fw_ver TEXT,"
-            "fw_description TEXT,"
+            "fw_desc TEXT,"
             "file_name TEXT,"
             "file_size INTEGER,"
             "page_url TEXT,"
@@ -194,8 +228,7 @@ def main():
         harvest_utils.driver=driver
         driver.get('http://www.tp-link.com/en/download-center.html')
         prevTrail=[]
-        modelWalker()
-        prevTrail.pop()
+        marketSelect()
         driver.quit()
         conn.close()
     except Exception as ex:
