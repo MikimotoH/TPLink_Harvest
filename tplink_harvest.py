@@ -148,6 +148,40 @@ def fileWalker():
         traceback.print_exc()
         driver.save_screenshot(getScriptName()+'_'+getFuncName()+'_exc.png')
         
+def revisionWalker():
+    global driver,prevTrail
+    try:
+        try:
+            dropdown=waitVisible('#dlDropDownBox dd:nth-child(2) p span',9,0.4)
+        except (TimeoutException,NoSuchElementException):
+            ulog('no revision dropdown')
+            prevTrail+=[0]
+            fileWalker()
+            prevTrail.pop()
+            return
+        dropdown.click()
+        revs = getElems('#dlDropDownBox dd ul li a')
+        waitUntil(lambda: (_.is_displayed() for _ in revs))
+        waitUntil(lambda: ulog('revs=%s'%
+            [_.text for _ in revs])>=0)
+        numRevs = len(revs)
+        startIdx=getStartIdx()
+        for idx in range(startIdx,numRevs):
+            rev=revs[idx]
+            ulog('click "%s"'%rev.text)
+            prevTrail+=[idx]
+            rev.click()
+            fileWalker()
+            prevTrail.pop()
+            dropdown=waitVisible('#dlDropDownBox dd:nth-child(2) p span',3,0.4)
+            dropdown.click()
+            revs = getElems('#dlDropDownBox dd ul li a')
+            waitUntil(lambda: (_.is_displayed() for _ in revs))
+    except Exception as ex:
+        ipdb.set_trace()
+        traceback.print_exc()
+        driver.save_screenshot(getScriptName()+'_'+getFuncName()+'_exc.png')
+        
 
 def modelWalker():
     global driver,prevTrail
@@ -163,7 +197,7 @@ def modelWalker():
             models[idx].click()
             waitUntil(lambda:len(driver.window_handles)==2)
             driver.switch_to.window(driver.window_handles[-1])
-            fileWalker()
+            revisionWalker()
             prevTrail.pop()
             models = getElems('.list ul li a')
     except Exception as ex:
@@ -171,7 +205,8 @@ def modelWalker():
         traceback.print_exc()
         driver.save_screenshot(getScriptName()+'_'+getFuncName()+'_exc.png')
 
-def marketSelect():
+
+def marketWalker():
     global driver,prevTrail
     try:
         showEol=waitVisible('#showEndLife')
@@ -201,6 +236,7 @@ def marketSelect():
         traceback.print_exc()
         driver.save_screenshot(getScriptName()+'_'+getFuncName()+'_exc.png')
 
+
 def main():
     global startTrail,prevTrail, driver,conn
     try:
@@ -228,7 +264,7 @@ def main():
         harvest_utils.driver=driver
         driver.get('http://www.tp-link.com/en/download-center.html')
         prevTrail=[]
-        marketSelect()
+        marketWalker()
         driver.quit()
         conn.close()
     except Exception as ex:
