@@ -52,5 +52,24 @@ Out[47]: True
 In [48]: CSSs('#content_firmware table')[3].is_displayed()
 Out[48]: False
 
+```
+
+## Revision Select
+
+<img src='TPLink_3.png'>
+<img src='TPLink_3_1.png'>
+```python
+In [138]: CSS('#dlDropDownBox > dd:nth-child(2) > p:nth-child(1) > span:nth-child(1)').click()
+
+In [139]: [_.text for _ in CSSs('#dlDropDownBox dd ul li a')]
+Out[139]: ['V3', 'V2', 'V1']
+
+In [140]: CSSs('#dlDropDownBox dd ul li a')[2].text
+Out[140]: 'V1'
+
+In [141]: CSSs('#dlDropDownBox dd ul li a')[2].click()
+
+In [142]: driver.current_url
+Out[142]: 'http://www.tp-link.com/en/download/TL-MR3420_V1.html'
 
 ```
