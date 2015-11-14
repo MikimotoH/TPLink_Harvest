@@ -55,7 +55,7 @@ Out[48]: False
 ```
 
 ## Revision Select
-
+Below is a Twitter Bootstrap style Dropdown list, not a HTML Select. Selenium Select is unable to select it. We have to click on this control so as to make hidden items ('#dlDropDownBox dd ul li a') visible.
 <img src='TPLink_3.png'>
 <img src='TPLink_3_1.png'>
 ```python
