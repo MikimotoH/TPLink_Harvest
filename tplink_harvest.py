@@ -75,7 +75,8 @@ def cssWithText(css:str,txt:str)->WebElement:
 def guessDate(txt:str)->datetime:
     """ txt = '22/10/15' """
     try:
-        return datetime.strptime(txt, '%d/%m/%y')
+        m = re.search(r'\d{2}/\d{2}/\d{2}', txt)
+        return datetime.strptime(m.group(0), '%d/%m/%y')
     except Exception as ex:
         ipdb.set_trace()
         print('txt=',txt)
@@ -84,13 +85,13 @@ def guessFileSize(txt:str)->int:
     """ txt='6.56 MB'
     """
     try:
-        m = re.search(r'(\d*[.])?\d+', txt, re.I)
+        m = re.search(r'(\d+\.?\d+)\s*(MB|KB)', txt, re.I)
         if not m:
             ulog('error txt="%s"'%txt)
             return 0
         unitDic=dict(MB=1024**2,KB=1024)
-        unitTxt = txt[m.span()[1]:].strip()
-        return int(float(m.group(0)) * unitDic[unitTxt] )
+        unitTxt = m.group(2).upper()
+        return int(float(m.group(1)) * unitDic[unitTxt] )
     except Exception as ex:
         ipdb.set_trace()
         print('txt=',txt)
@@ -105,8 +106,6 @@ def fileWalker():
         tabbtn = cssWithText('ul.row li a', 'Firmware')
         if not tabbtn:
             ulog('no firmware download for "%s"'%modelName)
-            driver.close()
-            driver.switch_to.window(driver.window_handles[-1])
             return
         tabbtn.click()
         pageUrl=driver.current_url
@@ -121,10 +120,10 @@ def fileWalker():
                 continue
             ulog('trail=%s'%(prevTrail+[idx]))
             basicInfo=table.find_element_by_css_selector('tr.basic-info').text
-            fileName,_,dateStr,_,lang,_,fileSize = basicInfo.splitlines()
-            fwDate=guessDate(dateStr)
+            fileName=basicInfo.splitlines()[0].strip()
             fwVer = fileName.split('_')[-1].strip()
-            fileSize=guessFileSize(fileSize)
+            fwDate=guessDate(basicInfo)
+            fileSize=guessFileSize(basicInfo)
             fileLink=table.find_element_by_css_selector('a')
             fileUrl=fileLink.get_attribute('href')
             ulog('fileName="%s"'%fileName)
@@ -140,8 +139,6 @@ def fileWalker():
                 ":pageUrl,:fileUrl,:trailStr)",locals())
             ulog('UPSERT "%(modelName)s", "%(revName)s", "%(fwDate)s", '
                 ' "%(fileName)s", %(fileSize)s,%(fileUrl)s'%locals())
-        driver.close()
-        driver.switch_to.window(driver.window_handles[-1])
         return
     except Exception as ex:
         ipdb.set_trace()
@@ -154,29 +151,34 @@ def revisionWalker():
         try:
             dropdown=waitVisible('#dlDropDownBox dd:nth-child(2) p span',9,0.4)
         except (TimeoutException,NoSuchElementException):
-            ulog('no revision dropdown')
             prevTrail+=[0]
+            ulog('no revision dropdown, trail=%s'%prevTrail)
             fileWalker()
             prevTrail.pop()
+            driver.close()
+            driver.switch_to.window(driver.window_handles[-1])
             return
         dropdown.click()
         revs = getElems('#dlDropDownBox dd ul li a')
-        waitUntil(lambda: (_.is_displayed() for _ in revs))
+        waitUntil(lambda: all(_.is_displayed() for _ in revs))
         waitUntil(lambda: ulog('revs=%s'%
             [_.text for _ in revs])>=0)
         numRevs = len(revs)
         startIdx=getStartIdx()
         for idx in range(startIdx,numRevs):
             rev=revs[idx]
-            ulog('click "%s"'%rev.text)
             prevTrail+=[idx]
+            ulog('click "%s",trail=%s'%(rev.text,prevTrail))
             rev.click()
             fileWalker()
             prevTrail.pop()
             dropdown=waitVisible('#dlDropDownBox dd:nth-child(2) p span',3,0.4)
             dropdown.click()
             revs = getElems('#dlDropDownBox dd ul li a')
-            waitUntil(lambda: (_.is_displayed() for _ in revs))
+            waitUntil(lambda: all(_.is_displayed() for _ in revs))
+        driver.close()
+        driver.switch_to.window(driver.window_handles[-1])
+        return
     except Exception as ex:
         ipdb.set_trace()
         traceback.print_exc()
