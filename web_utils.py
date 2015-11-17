@@ -72,7 +72,12 @@ def get_http_resp_content_bin(url:str) -> (bytes, str, str):
 
 def urlFileName(url:str)->str:
     from os import path
-    return path.basename(parse.urlsplit(url).path)
+    r = path.basename(parse.urlsplit(url).path)
+    if r:
+        return r
+    r = path.basename(parse.urlsplit(url).query)
+    assert r
+    return r
 
 
 class MyHTTPRedirectHandler(urllib.request.HTTPRedirectHandler):
@@ -101,7 +106,7 @@ class MyHTTPRedirectHandler(urllib.request.HTTPRedirectHandler):
     http_error_301 = http_error_303 = http_error_307 = http_error_302
 
 
-def downloadFile(url:str, fname:str, timeOut:int=10, chunkSize:int=2*1024*1024, 
+def downloadFile(url:str, fname:str, timeOut:int=10, chunkSize:int=2*1024*1024,
         timeOutInterval:int=3):
     """ download file from url to fname (abspath)
         Keyword arguments:
@@ -116,7 +121,7 @@ def downloadFile(url:str, fname:str, timeOut:int=10, chunkSize:int=2*1024*1024,
     urllib.request.install_opener(opener)
     while True:
         try:
-            with request.urlopen(firefox_url_req(url), 
+            with request.urlopen(firefox_url_req(url),
                 timeout=timeOut) as resp:
                 uprint("resp_headers=%s"%(resp.info().items()))
                 with open(fname+".part", mode='wb') as fout:
@@ -135,6 +140,14 @@ def downloadFile(url:str, fname:str, timeOut:int=10, chunkSize:int=2*1024*1024,
             print('socket.timeout, sleep %d seconds'%timeOutInterval)
             import time
             time.sleep(timeOutInterval)
+
+def safeUrl(url:str)->str:
+    from urllib import parse
+    pr = parse.urlparse(url)
+    pr2 = parse.ParseResult(scheme=pr.scheme, netloc=pr.netloc,
+            path=parse.quote(pr.path,'/%'), params=pr.params,
+            query=pr.query, fragment=pr.fragment)
+    return parse.urlunparse(pr2)
 
 
 def safeFileName(name:str)->str:
