@@ -91,4 +91,5 @@ When you `driver.back()` to the previous page, you have to `driver.find_elements
 
 [Selenium Stale Element](https://raw.githubusercontent.com/MikimotoH/TPLink_Harvest/master/Selenium_StaleElement.png)
 
+<img src='Selenium_StaleElement.png'>
 
