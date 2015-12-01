@@ -83,7 +83,20 @@ Out[142]: 'http://www.tp-link.com/en/download/TL-MR3420_V1.html'
 
 ```
 
-## Frequent Pitfalls of Selenium Webdriver
+## Tree Hierarchy of TPLink Website
+
+<img src='TPLink_Tree_Trail_Hierarchy.PNG'>
+
+- Model "TL-MR3420" has 3 revisions, and revision V2 has 3 files (tables).
+- If you want to continue from revision V2, second file of TL-MR3420, you can specify arguments 
+
+```sh
+python3 -u tplink_harvest.py 0, 1, 1, 1
+```
+- The below argument is read as "start from 0th market (home), 1th model, 1th revision, 1th file"
+- (The actual index of TL-MR3420 could not be 1th, please be noted)
+
+## Common Pitfalls of Selenium Webdriver
 
 ### StaleElement (StaleElementReferenceException)
 
