@@ -4,8 +4,7 @@ Harvest TP-Link Firmware Files
 
 ## Enumerate models
 
-<iframe title="Use Firefox Inspector and Firebug to get CSS Selector" width="560" height="315" src="https://www.youtube.com/v/C-h9QthlYyU?html5=1" frameborder="0" allowfullscreen></iframe>
-
+[![Use Firefox Inspector and Firebug](TPLink_Firefox_Inspector_Firebug_1.png)](https://www.youtube.com/watch?v=C-h9QthlYyU "Use Firefox Inspector and Firebug")
 
 <img src='TPLink_1.png'>
 ```python
