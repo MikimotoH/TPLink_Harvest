@@ -4,11 +4,14 @@ Harvest TP-Link Firmware Files
 
 ## Enumerate models
 
+Below Youtube Video teaches you how to use Firefox "Element Inspector" (Ctrl-Shift-I) and Firebug (F12) to get CSS Selector of the items you want to enumerate 
 [![Use Firefox Inspector and Firebug](TPLink_Firefox_Inspector_Firebug_1.png)](https://www.youtube.com/watch?v=C-h9QthlYyU "Use Firefox Inspector and Firebug")
 
 <img src='TPLink_1.png'>
 ```python
-models= driver.find_elements_by_css_selector('.list ul li span a')
+CSS = driver.find_element_by_css_selector # select single one element
+CSSs = driver.find_elements_by_css_selector # select multiple elements
+models= CSSs('.list ul li span a')
 ```
 
 ## Enumerate files
