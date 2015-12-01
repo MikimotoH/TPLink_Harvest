@@ -1,5 +1,4 @@
 # TPLink Harvest
-Harvest TP-Link Firmware Files
 
 
 ## Enumerate models
@@ -7,6 +6,9 @@ Harvest TP-Link Firmware Files
 Below Youtube Video teaches you how to use Firefox "Element Inspector" (Ctrl-Shift-I) and Firebug (F12) to get CSS Selector of the items you want to enumerate 
 [![Use Firefox Inspector and Firebug](TPLink_Firefox_Inspector_Firebug_1.png)](https://www.youtube.com/watch?v=C-h9QthlYyU "Use Firefox Inspector and Firebug")
 
+- After copying "Unique CSS Selector", you get "$('div.list:nth-child(1) > ul:nth-child(9) > li:nth-child(1) > span:nth-child(1) > a:nth-child(1)')". 
+- The above CSS Selector cannot select all the models appear in the page, we can simplify it to "$('.list ul li span a')" by removing certain ":nth-child(i)"
+- [CSS Selectors Reference](http://www.w3schools.com/cssref/css_selectors.asp) tells you the differnce between "div > p" and "div p"
 <img src='TPLink_1.png'>
 ```python
 CSS = driver.find_element_by_css_selector # select single one element
