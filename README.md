@@ -89,6 +89,6 @@ Out[142]: 'http://www.tp-link.com/en/download/TL-MR3420_V1.html'
 
 When you `driver.back()` to the previous page, you have to `driver.find_elements_by_css_selector()` again.
 
-[Selenium Stale Element](Selenium_StaleElement.png)
+[Selenium Stale Element](https://raw.githubusercontent.com/MikimotoH/TPLink_Harvest/master/Selenium_StaleElement.png)
 
 
