@@ -89,6 +89,7 @@ In order to go to TL-MR3420, revision V2, you have to do select 4 times.
 - Market -> Model -> Revision -> File
 <img src='TPLink_Select_Procedures.PNG'>
 
+Therefore, we have a 4-level height Tree.
 <img src='TPLink_Tree_Trail_Hierarchy.PNG'>
 
 - Model "TL-MR3420" has 3 revisions, and revision V2 has 3 files (tables).
