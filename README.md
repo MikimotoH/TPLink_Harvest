@@ -14,7 +14,7 @@ CSSs = driver.find_elements_by_css_selector # select multiple elements
 models= CSSs('.list ul li span a')
 ```
 
-## Enumerate files
+## Enumerate tables (one file per table)
 <img src='TPLink_2.png'>
 ```python
 # choose support type='Firmware'
@@ -82,3 +82,13 @@ In [142]: driver.current_url
 Out[142]: 'http://www.tp-link.com/en/download/TL-MR3420_V1.html'
 
 ```
+
+## Frequent Pitfalls of Selenium Webdriver
+
+### StaleElement (StaleElementReferenceException)
+
+When you `driver.back()` to the previous page, you have to `driver.find_elements_by_css_selector()` again.
+
+[Selenium Stale Element](Selenium_StaleElement.png)
+
+
