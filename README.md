@@ -85,6 +85,10 @@ Out[142]: 'http://www.tp-link.com/en/download/TL-MR3420_V1.html'
 
 ## Tree Hierarchy of TPLink Website
 
+In order to go to TL-MR3420, revision V2, you have to do select 4 times.
+- Market -> Model -> Revision -> File
+<img src='TPLink_Select_Procedures.PNG'>
+
 <img src='TPLink_Tree_Trail_Hierarchy.PNG'>
 
 - Model "TL-MR3420" has 3 revisions, and revision V2 has 3 files (tables).
@@ -102,7 +106,9 @@ python3 -u tplink_harvest.py 0, 1, 1, 1
 
 When you `driver.back()` to the previous page, you have to `driver.find_elements_by_css_selector()` again.
 
-[Selenium Stale Element](https://raw.githubusercontent.com/MikimotoH/TPLink_Harvest/master/Selenium_StaleElement.png)
-
 <img src='Selenium_StaleElement.png'>
+
+### TimeoutException, NoSuchElementException
+
+It depends. You can use `ipdb.set_trace()` to entering interactive python debugger when encounter exceptions, and then use `driver.save_screenshot('1.png')`  to see the screenshot of the webpage. If the WebElement really shows up in the web page. Then it must be the synchronization problem.
 
