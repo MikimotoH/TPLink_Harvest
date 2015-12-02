@@ -2,6 +2,9 @@
 
 ## Headless Browser: Xvfb
 - You can run Firefox browser on an Ubuntu Server without GUI Desktop.
+- Running harvester on a dedicated machine. Don't run it on your laptop, because it's a lengthy job.
+- Rent a VPS or launch a computing instance on AWS/Azure/GoogleCloud.
+- We choose Ubuntu because the license fee of Ubuntu is free, and Windows is expensive.
 
 [![Use Xvfb to launch Headless Browser Firefox on Ubuntu Server without Desktop GUI](TPLink_use_Xvfb_headless_browser.png)](https://www.youtube.com/watch?v=sbwlIqGsj8Q "Use Xvfb to launch Headless Browser Firefox on Ubuntu Server without Desktop GUI")
 
