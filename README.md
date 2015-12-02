@@ -3,7 +3,7 @@
 ## Headless Browser: Xvfb
 - You can run Firefox browser on an Ubuntu Server without GUI Desktop.
 
-[![Use Xvfb to launch Headless Browser Firefox on Ubuntu Server without Desktop GUI](TPLink_use_Xvfb_headless_browser.png)](TPLink_use_Xvfb_headless_browser.png "Use Xvfb to launch Headless Browser Firefox on Ubuntu Server without Desktop GUI")
+[![Use Xvfb to launch Headless Browser Firefox on Ubuntu Server without Desktop GUI](TPLink_use_Xvfb_headless_browser.png)](https://www.youtube.com/watch?v=sbwlIqGsj8Q "Use Xvfb to launch Headless Browser Firefox on Ubuntu Server without Desktop GUI")
 
 - Below script can setup your server (without GUI Desktop) run Firefox
 
