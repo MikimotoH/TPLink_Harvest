@@ -1,5 +1,29 @@
 # TPLink Harvest
 
+## Headless Browser: Xvfb
+- You can run Firefox browser on an Ubuntu Server without GUI Desktop.
+- Below script can setup your server (without GUI Desktop) run Firefox
+
+```sh
+sudo apt-get install xvfb
+sudo apt-get install xfonts-100dpi xfonts-75dpi xfonts-scalable xfonts-cyrillic
+
+export DISPLAY=:1
+Xvfb :1 -screen 0 1920x1080x24 &
+```
+- Then try to run firefox and check whether your firefox running without abort.
+
+```sh
+firefox &
+ps aux | grep firefox
+```
+
+- If above task works, then use Selenium to launch Firefox in IPython environment.
+
+```python
+from selenium import webdriver
+driver = webdriver.Firefox()
+```
 
 ## Enumerate models
 
