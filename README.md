@@ -5,10 +5,12 @@
 - Running harvester on a dedicated machine. Don't run it on your laptop, because it's a lengthy job.
 - Rent a VPS or launch a computing instance on AWS/Azure/GoogleCloud.
 - We choose Ubuntu because the license fee of Ubuntu is free, and Windows is expensive.
+- A compute instance with 2GiB RAM is enough to run Xvfb + Selenium + Firefox for most of websites. If the WebDriver ofter aborts unexpectedly, it may caused by memory not enought.
+- Use Tmux so that you don't need to worry Wi-Fi disconnected unexpected while SSH connected. You can restore the last SSH session by Tmux.
 
 [![Use Xvfb to launch Headless Browser Firefox on Ubuntu Server without Desktop GUI](TPLink_use_Xvfb_headless_browser.png)](https://www.youtube.com/watch?v=sbwlIqGsj8Q "Use Xvfb to launch Headless Browser Firefox on Ubuntu Server without Desktop GUI")
 
-- Below script can setup your server (without GUI Desktop) run Firefox
+- Below script can setup your server (without GUI Desktop installed) to run Firefox
 
 ```sh
 sudo apt-get install xvfb
@@ -17,7 +19,7 @@ sudo apt-get install xfonts-100dpi xfonts-75dpi xfonts-scalable xfonts-cyrillic
 export DISPLAY=:1
 Xvfb :1 -screen 0 1920x1080x24 &
 ```
-- Then try to run firefox and check whether your firefox running without abort.
+- Then try to run firefox and check whether the Firefox runs without aborting.
 
 ```sh
 firefox &
@@ -164,3 +166,12 @@ except (TimeoutException,NoSuchElementException):
     ulog('no revision dropdown, trail=%s'%prevTrail)
 ```
 
+#### Wait for Web Page Ready
+
+There are two ways to wait for page loaded readily.
+- use `isReadyState()` to test whether whole page is loaded.
+  * Pros: you don't need to know any specific Web Element in the new page
+  * Cons: If the page is AJAX, which loads its content infinitely, then you will wait infinitely.
+- use an "Anchor Element". When this Anchor Element is visible, that means the webpage and other elements are ready.
+  * Pros: can handle AJAX web page.
+  * Cons: if that Anchor Element doesn't show always, you have to choose a plan B.
