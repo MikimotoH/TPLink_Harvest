@@ -2,6 +2,9 @@
 
 ## Headless Browser: Xvfb
 - You can run Firefox browser on an Ubuntu Server without GUI Desktop.
+
+[![Use Xvfb to launch Headless Browser Firefox on Ubuntu Server without Desktop GUI](TPLink_use_Xvfb_headless_browser.png)](TPLink_use_Xvfb_headless_browser.png "Use Xvfb to launch Headless Browser Firefox on Ubuntu Server without Desktop GUI")
+
 - Below script can setup your server (without GUI Desktop) run Firefox
 
 ```sh
@@ -19,6 +22,7 @@ ps aux | grep firefox
 ```
 
 - If above task works, then use Selenium to launch Firefox in IPython environment.
+
 
 ```python
 from selenium import webdriver
@@ -137,5 +141,23 @@ When you `driver.back()` to the previous page, you have to `driver.find_elements
 
 ### TimeoutException, NoSuchElementException
 
-It depends. You can use `ipdb.set_trace()` to entering interactive python debugger when encounter exceptions, and then use `driver.save_screenshot('1.png')`  to see the screenshot of the webpage. If the WebElement really shows up in the web page. Then it must be the synchronization problem.
+- It depends. You can use `ipdb.set_trace()` to entering interactive python debugger when encounter exceptions, and then use `driver.save_screenshot('1.png')`  to see the screenshot of the webpage. If the WebElement really shows up in the web page. Then it must be the synchronization problem.
+
+- Webdriver runs asynchronously with python script. you have to use polling and wait for a specific Web Element.
+
+- There are many `waitXXX` functions in [harvest_utils.py](harvest_utils.py) script.For example, waitVisible()
+```python
+def waitVisible(css:str, timeOut:float=30, pollFreq:float=2.0) -> WebElement :
+    global driver
+    wait = WebDriverWait(driver, timeOut, poll_frequency=pollFreq)
+    return wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR,css)))
+```
+
+- For example, in `revisionWalker()`, we use `waitVisible()` to get dropdown Widget, the time out is 9 second, and polling interval is 0.4. `TimeoutException` will be raised if such Revision dropdown is really on this page.
+```python
+try:
+    dropdown=waitVisible('#dlDropDownBox dd:nth-child(2) p span',9,0.4)
+except (TimeoutException,NoSuchElementException):
+    ulog('no revision dropdown, trail=%s'%prevTrail)
+```
 
