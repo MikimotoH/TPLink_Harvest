@@ -175,3 +175,36 @@ There are two ways to wait for page loaded readily.
 - use an "Anchor Element". When this Anchor Element is visible, that means the webpage and other elements are ready.
   * Pros: can handle AJAX web page.
   * Cons: if that Anchor Element doesn't show always, you have to choose a plan B.
+
+
+## Three Phases of Harvest
+
+### Phase 1. Scrape Metadata of File
+
+In the first phase, we run tplink_harvest.py, which only scrape the metadata of file( file version, release date, description, file URL). We don't download the file in the first phase because it will stuck the whole tree travesal job. We store the metadata of file into the SQLite database locally.
+- Below is the SQLite DB Schema we used to store the metadata. In the first phase, file_size and file_sha1 will be unknown.
+```sql
+CREATE TABLE IF NOT EXISTS TFiles(
+id INTEGER NOT NULL,
+model TEXT,
+revision TEXT,
+fw_date DATE,
+fw_ver TEXT,
+fw_desc TEXT,
+file_name TEXT,
+file_size INTEGER,
+page_url TEXT,
+file_url TEXT,
+tree_trail TEXT,
+file_sha1 TEXT,
+PRIMARY KEY (id)
+UNIQUE(model,revision,file_name)
+);
+```
+
+### Phase 2. Download File and store SHA-1 hash
+In the second phase, we run tplink_download.py, which really downloads file according to the file_url stored in the SQLite database.
+- The column of file_size and file_sha1 will be updated in the second phase.
+
+### Phase 3. Update into Postgres DB
+In the final phase, we will write firmware file SHA1, file_size, firmware version, release date to TFirmware table; insert new TP-Link model if the associated device model does not exist in TDevice table.
