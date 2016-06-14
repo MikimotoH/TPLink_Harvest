@@ -24,7 +24,7 @@ from contextlib import suppress
 
 driver,conn=None,None
 startTrail,prevTrail=[],[]
-loop_ahead = False
+# loop_ahead = False
 
 def css(path) -> WebElement:
     global driver
@@ -97,17 +97,14 @@ def storeFile(modelName, fileItem):
 def walkFile():
     global driver, prevTrail
     try:
-        # Bottom Firmware appears, it has to wait for 2-5 seconds
-        # waitCursor = css('#ctl00_ctl00_ctl00_mainContent_localizedContent_bodyCenter_adsPanel_upProgProductLoader')
-        # for _i in range(10):
-        #     if not waitCursor.is_displayed():
-        #         break
-        #     time.sleep(1)
-
-        modelName = waitTextChanged('h2#searchResults')
+        try:
+            modelName = waitTextChanged('h2#searchResults', None, 5, 1)
+        except TimeoutException:
+            modelName = waitText('h2#searchResults')
 
         try:
-            resultsCount = waitTextChanged('#LargeFirmware>p', None, 5, 1)
+            resultsCount = waitTextChanged('#LargeFirmware>p', None, 0.5, 0.25)
+            ulog('waitTextChanged #LargeFirmware>p')
         except TimeoutException:
             ulog('TimeoutException: #LargeFirmware>p')
             resultsCount = waitText('#LargeFirmware>p')
@@ -116,11 +113,22 @@ def walkFile():
             ulog('NoSuchElementException: #LargeFirmware>p')
             resultsCount = waitText('#LargeFirmware>p')
             pass
+        ulog('resutlsCount=%s'%resultsCount)
         if resultsCount.startswith('No matching'):
             return
+        numFiles = int(re.search(r'\d+', resultsCount).group(0))
+        ulog('numFiles=%d'%numFiles)
 
+        if numFiles > 10:
+            ulog('click moreResults because numFiles=%d>10'%numFiles)
+            moreResults = waitClickable('#lnkAllDownloadMore')
+            moreResults.click()
+            waitClickable('#LargeFirmware li:nth-child(%d) '%numFiles +
+                        'a.navlistsearch')
         try:
-            waitTextChanged('#LargeFirmware a.navlistsearch',None,5,1)
+            waitTextChanged('#LargeFirmware li:nth-child(%d)'%numFiles,
+                            None, 1, 0.5)
+            ulog('waitTextChanged #LargeFirmware a.navlistsearch')
         except TimeoutException:
             ulog('TimeoutException: #LargeFirmware a.navlistsearch')
             pass
@@ -128,33 +136,19 @@ def walkFile():
             ulog('NoSuchElementException #LargeFirmware a.navlistsearch')
             return
 
-        for _i in range(10):
-            try:
-                _t = [_.text for _ in getElems('#LargeFirmware a.navlistsearch')]
-                break
-            except StaleElementReferenceException:
-                time.sleep(0.5)
         files = getElems('#LargeFirmware a.navlistsearch')
         startIdx = getStartIdx()
         # get firmware download URL
-        for idx in range(startIdx, 10000):
-            try:
-                for _i in range(10):
-                    try:
-                        fileName = files[idx].text
-                        break
-                    except StaleElementReferenceException:
-                        time.sleep(0.5)
-                        files = getElems('#LargeFirmware a.navlistsearch')
-                ulog('idx=%d, fileName="%s"'%(idx, fileName))
-                if 'firmware' not in fileName.lower():
-                    continue
-                prevTrail+=[idx]
-                storeFile(modelName, files[idx])
-                prevTrail.pop()
-                time.sleep(0.5)
-            except IndexError:
-                break
+        for idx in range(startIdx, numFiles):
+            assert files[idx].is_displayed()
+            fileName = files[idx].text
+            ulog('idx=%d, fileName="%s"'%(idx, fileName))
+            if 'firmware' not in fileName.lower():
+                continue
+            prevTrail+=[idx]
+            storeFile(modelName, files[idx])
+            prevTrail.pop()
+            # time.sleep(0.5)
     except Exception as ex:
         traceback.print_exc(); ipdb.set_trace()
         driver.save_screenshot('netgear_exc.png')
@@ -168,19 +162,15 @@ def walkProd(bWaitTextChange=True):
                  '_adsPanel_lbProduct')
         if bWaitTextChange:
             waitTextChanged(zpath)
-        for _i in range(10):
-            try:
-                _t = [_.text for _ in Select(css(zpath)).options]
-            except StaleElementReferenceException:
-                curSel = Select(css(zpath))
-                time.sleep(0.5)
+        # for _i in range(10):
+        #     try:
+        #         _t = [_.text for _ in Select(css(zpath)).options]
+        #     except StaleElementReferenceException:
+        #         curSel = Select(css(zpath))
+        #         time.sleep(0.5)
         curSel = Select(css(zpath))
         numProds = len(curSel.options)
         ulog("numProds=%d"%numProds)
-
-        # for _i in range(numProds):
-        #     Select(css(zpath)).select_by_index(_i)
-        #     time.sleep(0.5)
 
         startIdx = getStartIdx()
         for idx in range(startIdx, numProds):
@@ -191,7 +181,7 @@ def walkProd(bWaitTextChange=True):
             prevTrail+=[idx]
             walkFile()
             prevTrail.pop()
-            time.sleep(0.5)
+            # time.sleep(0.5)
     except Exception as ex:
         traceback.print_exc(); ipdb.set_trace()
         driver.save_screenshot('netgear_exc.png')
@@ -207,12 +197,12 @@ def walkProdFam():
         curSel = Select(css(zpath))
         numProdFams = len(curSel.options)
         ulog("numProdFams=%d"%numProdFams)
-        if loop_ahead:
-            for _i in range(numProdFams):
-                Select(css(zpath)).select_by_index(_i)
-                waitTextChanged('#ctl00_ctl00_ctl00_mainContent_localizedContent_bodyCenter'+
-                    '_adsPanel_lbProduct')
-                time.sleep(0.2)
+        # if loop_ahead:
+        #     for _i in range(numProdFams):
+        #         Select(css(zpath)).select_by_index(_i)
+        #         waitTextChanged('#ctl00_ctl00_ctl00_mainContent_localizedContent_bodyCenter'+
+        #             '_adsPanel_lbProduct')
+        #         time.sleep(0.2)
 
         startIdx = getStartIdx()
         for idx in range(startIdx, numProdFams):
@@ -223,7 +213,7 @@ def walkProdFam():
             prevTrail+=[idx]
             walkProd(numProdFams>1)
             prevTrail.pop()
-            time.sleep(0.5)
+            # time.sleep(0.5)
     except Exception as ex:
         traceback.print_exc(); ipdb.set_trace()
         driver.save_screenshot('netgear_exc.png')
@@ -240,20 +230,17 @@ def walkProdCat():
         waitClickable('#ctl00_ctl00_ctl00_mainContent_localizedContent_bodyCenter_BasicSearchPanel_btnAdvancedSearch')\
             .click()
 
-        # click Search Firmware Only Checkbox
-        # waitClickable('#ctl00_ctl00_ctl00_mainContent_localizedContent_bodyCenter_adsPanel_CheckBoxFirmware')\
-        #    .click()
         zpath = ('#ctl00_ctl00_ctl00_mainContent_localizedContent_bodyCenter_'+
                  'adsPanel_lbProductCategory')
         curSel = Select(css(zpath))
         numProdCats = len(curSel.options)
         ulog('numProdCats=%d'%numProdCats)
-        if loop_ahead:
-            for _i in range(numProdCats):
-                Select(css(zpath)).select_by_index(_i)
-                waitTextChanged('#ctl00_ctl00_ctl00_mainContent_localizedContent_bodyCenter'+
-                        '_adsPanel_lbProductFamily')
-                time.sleep(0.2)
+        # if loop_ahead:
+        #     for _i in range(numProdCats):
+        #         Select(css(zpath)).select_by_index(_i)
+        #         waitTextChanged('#ctl00_ctl00_ctl00_mainContent_localizedContent_bodyCenter'+
+        #                 '_adsPanel_lbProductFamily')
+        #         time.sleep(0.2)
 
         startIdx = getStartIdx()
         for idx in range(startIdx, numProdCats):
@@ -264,7 +251,7 @@ def walkProdCat():
             prevTrail+=[idx]
             walkProdFam()
             prevTrail.pop()
-            time.sleep(0.5)
+            # time.sleep(0.5)
     except Exception as ex:
         traceback.print_exc(); ipdb.set_trace()
         driver.save_screenshot('netgear_exc.png')
