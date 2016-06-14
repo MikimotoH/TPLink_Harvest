@@ -15,6 +15,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.remote.webelement import WebElement
 from my_utils import uprint
 from contextlib import contextmanager
+from infix_operator import Infix
 
 
 def getFirefox(dontShowImage=True, downloadDir='/tmp', unstable=False):
@@ -40,7 +41,7 @@ def getFirefox(dontShowImage=True, downloadDir='/tmp', unstable=False):
     # whether or not to show the Downloads window when a download begins.
     profile.set_preference("browser.download.manager.showWhenStarting", False)
     profile.set_preference("browser.download.dir", downloadDir)
-    profile.set_preference("browser.helperApps.neverAsk.saveToDisk", 
+    profile.set_preference("browser.helperApps.neverAsk.saveToDisk",
         "application/octet-stream"+\
         ",application/zip"+\
         ",application/x-rar-compressed"+\
@@ -177,16 +178,22 @@ def waitClickable(css:str, timeOut:float=60,pollFreq:float=2.0) -> WebElement :
     wait = WebDriverWait(driver, timeOut, poll_frequency=pollFreq)
     return wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR,css)))
 
-def waitTextChanged(css:str,oldText:str=None) -> str:
+def waitTextChanged(css:str,oldText:str=None, timeOut=30, pollFreq=1) -> str:
+    def _text(css):
+        global driver
+        return driver.find_element_by_css_selector(css).text
     if oldText is None:
-        oldText=getText(css)
-    for x in range(20):
-        newText = getText(css)
+        oldText=_text(css)
+    timeElapsed=0.0
+    while timeElapsed<timeOut:
+        beginTime = time.time()
+        newText = _text(css)
         if newText != oldText:
             return newText
-        sleep(3)
+        sleep(pollFreq)
+        timeElapsed += (time.time()-beginTime)
     raise TimeoutException('[waitTextChanged] oldText="%s", '
-            'newText="%s"'%(oldText,newText))
+            'newText="%s"'%(oldText, newText))
 
 def waitUntilStable(css:str, timeOut:float=5, pollFreq:float=0.5):
     oldText = waitText(css)
@@ -205,7 +212,7 @@ def waitUntilStable(css:str, timeOut:float=5, pollFreq:float=0.5):
 
 def dumpSnapshot(msg:str):
     global driver
-    fileTitle = safeFileName(msg) 
+    fileTitle = safeFileName(msg)
     driver.save_screenshot(fileTitle+'.png')
     with open(fileTitle+'.html', 'w', encoding='utf-8-sig') as fout:
         fout.write(driver.page_source)
@@ -299,4 +306,16 @@ def retryUntilTrue(statement, timeOut:float=6.2, pollFreq:float=0.3):
 def cssWithText(css:str, txt:str)->WebElement:
     global driver
     return next(_ for _ in driver.find_elements_by_css_selector(css) if _.text==txt)
+
+def driver_css(dr, path) -> WebElement:
+    return dr.find_elements_by_css_selector(path)
+dcss = Infix(driver_css)
+
+def driver_cssAll(dr, path) -> WebElement:
+    return dr.find_elements_by_css_selector(path)
+dcssAll = Infix(driver_cssAll)
+
+def driver_xpath(dr, path) -> WebElement:
+    return dr.find_elements_by_xpath(path)
+dxpath = Infix(driver_xpath)
 
