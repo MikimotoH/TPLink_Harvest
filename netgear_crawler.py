@@ -180,20 +180,21 @@ def walkFile():
             prevTrail.pop()
             # time.sleep(0.5)
         return PROC_OK
-    except (StaleElementReferenceException,AssertionError):
+    except (StaleElementReferenceException):
         try:
             driver.find_element_by_css_selector("a.btn.close.fl-left").\
                     click()
             return TRY_AGAIN
         except (NoSuchElementException):
             ipdb.set_trace()
-            pass
+    except TimeoutException as ex:
+        raise ex
     except Exception as ex:
         traceback.print_exc(); ipdb.set_trace()
         driver.save_screenshot('netgear_exc.png')
 
 
-def walkProd(bWaitTextChange=True):
+def walkProd():#bWaitTextChange=True):
     global driver, prevTrail
     try:
         # click overlay advertisement popup left button "No Thanks"
@@ -205,8 +206,8 @@ def walkProd(bWaitTextChange=True):
 
         zpath = ('#ctl00_ctl00_ctl00_mainContent_localizedContent_bodyCenter'+
                  '_adsPanel_lbProduct')
-        if bWaitTextChange:
-            waitTextChanged(zpath)
+        #if bWaitTextChange:
+        waitTextChanged(zpath)
         curSel = Select(css(zpath))
         numProds = len(curSel.options)
         ulog("numProds=%d"%numProds)
@@ -247,7 +248,7 @@ def walkProdFam():
             ulog('select "%s"'%curSel.options[idx].text)
             curSel.select_by_index(idx)
             prevTrail+=[idx]
-            walkProd(numProdFams>1)
+            walkProd()#numProdFams>1)
             prevTrail.pop()
     except Exception as ex:
         traceback.print_exc(); ipdb.set_trace()
