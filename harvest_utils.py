@@ -181,7 +181,12 @@ def waitClickable(css:str, timeOut:float=60,pollFreq:float=2.0) -> WebElement :
 def waitTextChanged(css:str,oldText:str=None, timeOut=30, pollFreq=1) -> str:
     def _text(css):
         global driver
-        return driver.find_element_by_css_selector(css).text
+        for _i in range(10):
+            try:
+                return driver.find_element_by_css_selector(css).text
+            except StaleElementReferenceException:
+                time.sleep(pollFreq)
+
     if oldText is None:
         oldText=_text(css)
     timeElapsed=0.0

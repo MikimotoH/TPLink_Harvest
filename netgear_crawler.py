@@ -21,11 +21,14 @@ import ipdb,pdb
 import traceback
 from my_utils import uprint, ulog
 from contextlib import suppress
+import asyncio
+import threading
 
 driver,conn=None,None
 startTrail,prevTrail=[],[]
 TRY_AGAIN=0
 PROC_OK=1
+PROC_GIVE_UP=2
 
 def css(path) -> WebElement:
     global driver
@@ -58,6 +61,21 @@ def sql(query:str, var=None):
     except sqlite3.Error as ex:
         print(ex)
         raise ex
+
+
+class ClickOutOverlayTimer(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+    def run(self):
+        while True:
+            try:
+                driver.find_element_by_css_selector("a.btn.close.fl-left").\
+                        click()
+                print('overlay terminated')
+                return
+            except:
+                print('no overlay, sleep 1 seconds')
+                time.sleep(1)
 
 
 def storeFile(modelName, fileItem):
@@ -101,7 +119,10 @@ def walkFile():
         try:
             modelName = waitTextChanged('h2#searchResults', None, 5, 1)
         except TimeoutException:
-            modelName = waitText('h2#searchResults')
+            try:
+                modelName = waitText('h2#searchResults', 5, 1)
+            except TimeoutException:
+                return PROC_GIVE_UP
         ulog('modelName="%s"'%modelName)
 
         resultsCount = waitText('#LargeFirmware>p')
@@ -178,7 +199,6 @@ def walkFile():
             prevTrail+=[idx]
             storeFile(modelName, files[idx])
             prevTrail.pop()
-            # time.sleep(0.5)
         return PROC_OK
     except (StaleElementReferenceException):
         try:
@@ -186,7 +206,7 @@ def walkFile():
                     click()
             return TRY_AGAIN
         except (NoSuchElementException):
-            ipdb.set_trace()
+            return TRY_AGAIN
     except TimeoutException as ex:
         raise ex
     except Exception as ex:
@@ -194,7 +214,7 @@ def walkFile():
         driver.save_screenshot('netgear_exc.png')
 
 
-def walkProd():#bWaitTextChange=True):
+def walkProd():
     global driver, prevTrail
     try:
         # click overlay advertisement popup left button "No Thanks"
@@ -206,7 +226,6 @@ def walkProd():#bWaitTextChange=True):
 
         zpath = ('#ctl00_ctl00_ctl00_mainContent_localizedContent_bodyCenter'+
                  '_adsPanel_lbProduct')
-        #if bWaitTextChange:
         waitTextChanged(zpath)
         curSel = Select(css(zpath))
         numProds = len(curSel.options)
@@ -223,6 +242,8 @@ def walkProd():#bWaitTextChange=True):
                 ret = walkFile()
                 if ret != TRY_AGAIN:
                     break
+            if ret== PROC_GIVE_UP:
+                ulog('"%s" is GIVE UP'% curSel.options[idx].text)
             prevTrail.pop()
         return PROC_OK
     except Exception as ex:
@@ -248,7 +269,7 @@ def walkProdFam():
             ulog('select "%s"'%curSel.options[idx].text)
             curSel.select_by_index(idx)
             prevTrail+=[idx]
-            walkProd()#numProdFams>1)
+            walkProd()
             prevTrail.pop()
     except Exception as ex:
         traceback.print_exc(); ipdb.set_trace()
@@ -308,6 +329,8 @@ def main():
         harvest_utils.driver= driver
         driver.get("http://downloadcenter.netgear.com/")
         prevTrail=[]
+        # tmr = ClickOutOverlayTimer()
+        # tmr.start()
         walkProdCat()
     except Exception as ex:
         traceback.print_exc(); ipdb.set_trace()
